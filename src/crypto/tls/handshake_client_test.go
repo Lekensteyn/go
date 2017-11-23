@@ -660,6 +660,31 @@ func TestHandshakeClientCertECDSA(t *testing.T) {
 	runClientTestTLS12(t, test)
 }
 
+func TestHandshakeClientCertRSAPSS(t *testing.T) {
+	// self-signed
+	issuer, err := x509.ParseCertificate(testRSAPSSCertificate)
+	if err != nil {
+		panic(err)
+	}
+	rootCAs := x509.NewCertPool()
+	rootCAs.AddCert(issuer)
+
+	config := testConfig.Clone()
+	cert, _ := X509KeyPair([]byte(clientCertificatePEM), []byte(clientKeyPEM))
+	config.Certificates = []Certificate{cert}
+	config.RootCAs = rootCAs
+
+	test := &clientTest{
+		name:    "ClientCert-RSA-RSAPSS",
+		command: []string{"openssl", "s_server", "-cipher", "AES128", "-verify", "1", "-sigalgs", "RSA-PSS+SHA256"},
+		config:  config,
+		cert:    testRSAPSSCertificate,
+		key:     testRSAPrivateKey,
+	}
+
+	runClientTestTLS12(t, test)
+}
+
 func TestClientResumption(t *testing.T) {
 	serverConfig := &Config{
 		CipherSuites: []uint16{TLS_RSA_WITH_RC4_128_SHA, TLS_ECDHE_RSA_WITH_RC4_128_SHA},

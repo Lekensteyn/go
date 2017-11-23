@@ -67,7 +67,9 @@ func testOpenSSLVersion() {
 	}
 
 	version := string(output)
-	if strings.HasPrefix(version, "OpenSSL 1.1.0") {
+	// At minimum "1.1.0" is required, but some tests need "1.1.1"
+	// (commit b2eb699874) which is not yet released.
+	if strings.HasPrefix(version, "OpenSSL 1.1.") {
 		return
 	}
 
@@ -75,6 +77,7 @@ func testOpenSSLVersion() {
 	println("")
 	println("You need to build OpenSSL 1.1.0 from source in order")
 	println("to update the test data.")
+	println("TestHandshakeClientCertRSAPSS requires 1.1.1-dev though.")
 	println("")
 	println("Configure it with:")
 	println("./Configure enable-weak-ssl-ciphers enable-ssl3 enable-ssl3-method -static linux-x86_64")
