@@ -34,6 +34,7 @@ var (
 	isCA       = flag.Bool("ca", false, "whether this cert should be its own Certificate Authority")
 	rsaBits    = flag.Int("rsa-bits", 2048, "Size of RSA key to generate. Ignored if --ecdsa-curve is set")
 	ecdsaCurve = flag.String("ecdsa-curve", "", "ECDSA curve to use to generate a key. Valid values are P224, P256 (recommended), P384, P521")
+	sigAlg     = flag.String("sigalg", "", "Signature algorithm to use in certificates. Valid values for RSA keys are SHA256-RSAPSS, SHA384-RSAPSS, SHA512-RSAPSS")
 )
 
 func publicKey(priv interface{}) interface{} {
@@ -110,7 +111,23 @@ func main() {
 		log.Fatalf("failed to generate serial number: %s", err)
 	}
 
+	var signatureAlgorithm x509.SignatureAlgorithm
+	switch *sigAlg {
+	case "":
+	case "SHA256-RSAPSS":
+		signatureAlgorithm = x509.SHA256WithRSAPSS
+	case "SHA384-RSAPSS":
+		signatureAlgorithm = x509.SHA384WithRSAPSS
+	case "SHA512-RSAPSS":
+		signatureAlgorithm = x509.SHA512WithRSAPSS
+	default:
+		fmt.Fprintf(os.Stderr, "Unrecognized signature algorithm: %q", *sigAlg)
+		os.Exit(1)
+	}
+
 	template := x509.Certificate{
+		SignatureAlgorithm: signatureAlgorithm,
+
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
 			Organization: []string{"Acme Co"},
